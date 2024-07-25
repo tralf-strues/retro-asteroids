@@ -23,6 +23,10 @@ jobs:
             install: brew install ninja
 
     steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
       - name: Install dependencies
         shell: bash
         run: ${{matrix.install}}
