@@ -5,7 +5,7 @@ Retro Asteroids is a game inspired by [Asteroids](https://en.wikipedia.org/wiki/
 
 ## Build
 
-The only dependency is X11. The supported compilers are GCC, Clang and AppleClang.
+The only dependency is X11. The supported compilers are GCC, ~~Clang~~ (*cannot fully check due to outdated clang versions on github runners*) and AppleClang.
 
 There are also several cmake configuration options:
 

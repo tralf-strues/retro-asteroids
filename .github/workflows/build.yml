@@ -13,12 +13,12 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
-        cxx: [clang, g++]
+        cxx: [g++]
         build_type: [debug, release]
 
         include:
           - os: ubuntu-latest
-            install: sudo apt-get install ninja-build gcc clang libx11-dev
+            install: sudo apt-get install ninja-build gcc libx11-dev
           - os: macos-latest
             install: brew install ninja
 
