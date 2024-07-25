@@ -1,4 +1,5 @@
 # Retro Asteroids
+![Ubuntu and MacOS build status](https://github.com/tralf-strues/retro-asteroids/actions/workflows/build.yml/badge.svg?branch=main)
 
 Retro Asteroids is a game inspired by [Asteroids](https://en.wikipedia.org/wiki/Asteroids_(video_game)) and [Geometry Wars](https://en.wikipedia.org/wiki/Geometry_Wars) games.
 

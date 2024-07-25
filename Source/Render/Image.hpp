@@ -18,7 +18,7 @@ template <typename PixelType>
 class Image {
  public:
   using PixelData = std::unique_ptr<PixelType[]>;
-  using ImageView = ImageView<PixelType>;
+  using ImageView = ::ra::render::ImageView<PixelType>;
 
   static constexpr math::Vec2u kWholeExtent = math::Vec2u(std::numeric_limits<uint32_t>::max());
 

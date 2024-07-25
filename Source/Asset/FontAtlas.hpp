@@ -12,6 +12,7 @@
 #include <Render/Image.hpp>
 
 #include <filesystem>
+#include <optional>
 
 namespace ra::asset {
 
@@ -23,7 +24,7 @@ struct FontAtlas {
     int32_t     advance;
   };
 
-  using Image            = render::Image<render::Color>;
+  using Image            = ::ra::render::Image<render::Color>;
   using CharacterInfoMap = std::unordered_map<char, CharacterInfo>;
   using ImageViewMap     = std::unordered_map<char, render::ImageView<render::Color>>;
 
