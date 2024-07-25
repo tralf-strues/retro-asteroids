@@ -1,0 +1,53 @@
+#=== C/C++ ===#
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+#=== Binary and build files ===#
+/build/
+/build_debug/
+/build_release/
+/out/
+/retro-asteroids
+
+#=== MacOS ===#
+*.DS_Store
+
+#=== IDEs ===#
+/.vs/
+/.idea/
+/.vscode/
+/.cache/
+/CMakeSettings.json
+
+#=== Logging and caches ===#
+

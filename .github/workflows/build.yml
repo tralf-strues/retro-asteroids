@@ -1,0 +1,32 @@
+name: Build for Linux Ubuntu & MacOS
+
+on:
+  push:
+    branches: "*"
+  pull_request:
+    branches: "*"
+
+jobs:
+  build-unix:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        cxx: [clang, g++]
+        build_type: [debug, release]
+
+        include:
+          - os: ubuntu-latest
+            install: sudo apt-get install ninja-build gcc clang libx11-dev
+          - os: macos-latest
+            install: brew install ninja
+
+    steps:
+      - name: Install dependencies
+        shell: bash
+        run: ${{matrix.install}}
+
+      - name: Build
+        shell: bash
+        run: ./build_unix.sh ${{matrix.build_type}} -DCMAKE_CXX_COMPILER=${{matrix.cxx}}
