@@ -10,14 +10,14 @@
 
 #include <Utils/Log.hpp>
 
-#include <exception>
+#include <cstdlib>
 
 #if defined(RA_DEBUG_MODE)
 
 #define RA_ASSERT(condition, fmt, ...) \
   if (!(condition)) {                  \
     RA_LOG_FATAL(fmt, __VA_ARGS__);    \
-    std::terminate();                  \
+    std::abort();                  \
   }
 
 #else
