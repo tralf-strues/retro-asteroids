@@ -11,7 +11,6 @@
 #include <Asset/ImageLoader.hpp>
 
 #include <fstream>
-#include <sstream>
 
 namespace ra::asset {
 
@@ -48,27 +47,27 @@ static math::Vec4i ParseTokenVec4i(std::string_view buffer) {
   return value;
 }
 
-static void ParseInfo(std::stringstream& ss, FontAtlas& font) {
-  font.padding_urdl = ParseTokenVec4i<"padding">(ss.view());
-  font.spacing      = ParseTokenVec2i<"spacing">(ss.view());
+static void ParseInfo(std::string_view view, FontAtlas& font) {
+  font.padding_urdl = ParseTokenVec4i<"padding">(view);
+  font.spacing      = ParseTokenVec2i<"spacing">(view);
 }
 
-static void ParseCommon(std::stringstream& ss, FontAtlas& font) {
-  font.line_height = ParseTokenInt<"lineHeight">(ss.view());
-  font.base_y      = ParseTokenInt<"base">(ss.view());
+static void ParseCommon(std::string_view view, FontAtlas& font) {
+  font.line_height = ParseTokenInt<"lineHeight">(view);
+  font.base_y      = ParseTokenInt<"base">(view);
 }
 
-static void ParseChar(std::stringstream& ss, FontAtlas& font) {
-  char ch = ParseTokenInt<"id">(ss.view());
+static void ParseChar(std::string_view view, FontAtlas& font) {
+  char ch = ParseTokenInt<"id">(view);
 
   FontAtlas::CharacterInfo info;
-  info.position_in_image.x = ParseTokenInt<"x">(ss.view());
-  info.position_in_image.y = ParseTokenInt<"y">(ss.view());
-  info.extent_pixels.x     = ParseTokenInt<"width">(ss.view());
-  info.extent_pixels.y     = ParseTokenInt<"height">(ss.view());
-  info.offset.x            = ParseTokenInt<"xoffset">(ss.view());
-  info.offset.y            = ParseTokenInt<"yoffset">(ss.view());
-  info.advance             = ParseTokenInt<"xadvance">(ss.view());
+  info.position_in_image.x = ParseTokenInt<"x">(view);
+  info.position_in_image.y = ParseTokenInt<"y">(view);
+  info.extent_pixels.x     = ParseTokenInt<"width">(view);
+  info.extent_pixels.y     = ParseTokenInt<"height">(view);
+  info.offset.x            = ParseTokenInt<"xoffset">(view);
+  info.offset.y            = ParseTokenInt<"yoffset">(view);
+  info.advance             = ParseTokenInt<"xadvance">(view);
 
   font.characters[ch] = info;
   font.image_views[ch] = font.image.CreateView(math::Vec2u(info.position_in_image), math::Vec2u(info.extent_pixels));
@@ -96,16 +95,12 @@ std::optional<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& 
     std::string line;
     std::getline(fs, line);
 
-    std::stringstream ss(std::move(line));
-
-    std::string tag;
-    ss >> tag;
-    if (tag == "info") {
-      ParseInfo(ss, font);
-    } else if (tag == "common") {
-      ParseCommon(ss, font);
-    } else if (tag == "char") {
-      ParseChar(ss, font);
+    if (line.find("info ") == 0U) {
+      ParseInfo(line, font);
+    } else if (line.find("common ") == 0U) {
+      ParseCommon(line, font);
+    } else if (line.find("char ") == 0U) {
+      ParseChar(line, font);
     }
   }
 

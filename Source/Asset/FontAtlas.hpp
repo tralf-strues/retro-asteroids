@@ -13,6 +13,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <unordered_map>
 
 namespace ra::asset {
 

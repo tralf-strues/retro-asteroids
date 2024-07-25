@@ -39,12 +39,12 @@ template <typename PixelType>
 Image<PixelType>::Image(PixelData&& pixels, const math::Vec2u& extent) : pixels_(std::move(pixels)), extent_(extent) {}
 
 template <typename PixelType>
-Image<PixelType>::ImageView Image<PixelType>::CreateView(math::Vec2u offset, math::Vec2u extent) {
+typename Image<PixelType>::ImageView Image<PixelType>::CreateView(math::Vec2u offset, math::Vec2u extent) {
   return ImageView(pixels_.get(), extent_, std::move(offset), extent == kWholeExtent ? extent_ : std::move(extent));
 }
 
 template <typename PixelType>
-Image<PixelType>::ImageView Image<PixelType>::CreateView(math::Vec2u offset, math::Vec2u extent) const {
+typename Image<PixelType>::ImageView Image<PixelType>::CreateView(math::Vec2u offset, math::Vec2u extent) const {
   return ImageView(pixels_.get(), extent_, std::move(offset), extent == kWholeExtent ? extent_ : std::move(extent));
 }
 
