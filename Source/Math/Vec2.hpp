@@ -9,6 +9,7 @@
 #pragma once
 
 #include <cmath>
+#include <cstdint>
 
 namespace ra::math {
 
@@ -168,7 +169,7 @@ inline constexpr float LengthSquared(const Vec2<T>& vector) {
 
 template <typename T>
 inline constexpr float Length(const Vec2<T>& vector) {
-  return std::sqrtf(LengthSquared(vector));
+  return std::sqrt(LengthSquared(vector));
 }
 
 template <typename T>

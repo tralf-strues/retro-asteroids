@@ -208,7 +208,7 @@ inline constexpr float LengthSquared(const Vec4<T>& vector) {
 
 template <typename T>
 inline constexpr float Length(const Vec4<T>& vector) {
-  return std::sqrtf(LengthSquared(vector));
+  return std::sqrt(LengthSquared(vector));
 }
 
 template <typename T>

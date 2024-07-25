@@ -10,6 +10,8 @@
 
 #include <Render/ImageView.hpp>
 
+#include <memory>
+
 namespace ra::render {
 
 template <typename PixelType>

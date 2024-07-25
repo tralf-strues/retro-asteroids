@@ -67,6 +67,10 @@ if(RA_ENABLE_WARNINGS)
   add_ra_compile_flags("-Wall")
   add_ra_compile_flags("-Wextra")
   add_ra_compile_flags("-Wpedantic")
+
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    add_ra_compile_flags("-Wno-changes-meaning")
+  endif()
 endif()
 
 # Additional macro definitions

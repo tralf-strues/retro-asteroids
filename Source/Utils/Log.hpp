@@ -55,7 +55,7 @@ void LogMessage(LogLevel level, std::string_view location, Args&&... args) {
   std::printf("\033[0m");
 
   std::printf("\033[%sm", detail::MessageLevelColor(level));
-  if constexpr(sizeof...(Args) > 0U) {
+  if constexpr (sizeof...(Args) > 0U) {
     std::printf(FormatString.data, std::forward<Args>(args)...);
   } else {
     std::printf("%s", FormatString.data);
@@ -63,7 +63,7 @@ void LogMessage(LogLevel level, std::string_view location, Args&&... args) {
   std::printf("\033[0m\n");
 #else
   std::printf("[%s][%s] ", detail::ToString(level), location.data());
-  if constexpr(sizeof...(Args) > 0U) {
+  if constexpr (sizeof...(Args) > 0U) {
     std::printf(FormatString.data, std::forward<Args>(args)...);
   } else {
     std::printf("%s", FormatString.data);

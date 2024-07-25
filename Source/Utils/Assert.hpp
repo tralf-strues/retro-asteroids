@@ -10,6 +10,8 @@
 
 #include <Utils/Log.hpp>
 
+#include <exception>
+
 #if defined(RA_DEBUG_MODE)
 
 #define RA_ASSERT(condition, fmt, ...) \
