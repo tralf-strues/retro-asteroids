@@ -19,6 +19,7 @@ add_ra_compile_flags("-std=c++20")
 
 if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   add_ra_compile_flags("-stdlib=libc++")
+  add_ra_link_flags("-stdlib=libc++")
 endif()
 
 # Debug/Release
