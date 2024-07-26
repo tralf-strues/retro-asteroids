@@ -58,6 +58,10 @@ std::span<uint8_t> ComponentArray::At(size_t idx) {
   return std::span(data_.get() + idx * component_size_, component_size_);
 }
 
+std::span<uint8_t> ComponentArray::Data() {
+  return std::span(data_.get(), size_ * component_size_);
+}
+
 void ComponentArray::Reallocate() {
   auto new_capacity = (capacity_ == 0U) ? 16U : capacity_ * 2U;
 

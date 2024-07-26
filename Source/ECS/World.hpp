@@ -9,6 +9,7 @@
 #pragma once
 
 #include <ECS/Entity.hpp>
+#include <ECS/System.hpp>
 #include <ECS/detail/Component.hpp>
 #include <ECS/detail/ComponentArray.hpp>
 
@@ -88,7 +89,8 @@ class World {
   template <typename Component>
   void Remove(EntityId entity);
 
-  // void DumpStorageLayout(std::ostream os);
+  template <typename... Components>
+  void Run(System<Components...> system);
 
  private:
   struct Archetype {
@@ -113,6 +115,9 @@ class World {
   Archetype* CreateArchetype(Archetype* old_archetype, detail::ComponentMask new_mask, size_t component_size);
 
   void RemoveEntityRecord(EntityRecord record);
+
+  template <typename Component>
+  std::span<Component> QueryComponent(Archetype& archetype);
 
   ArchetypeRegistry archetype_registry_;
   EntityRegistry    entity_registry_;
@@ -203,6 +208,25 @@ void World::Remove(EntityId entity) {
 
   // Remove entity record from old archetype
   RemoveEntityRecord(old_record);
+}
+
+template <typename... Components>
+void World::Run(System<Components...> system) {
+  static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
+
+  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+    if (archetype_mask.Has(kComponentMask)) {
+      system(QueryComponent<Components>(*archetype.get())...);
+    }
+  }
+}
+
+template <typename Component>
+std::span<Component> World::QueryComponent(Archetype& archetype) {
+  static const detail::ComponentId kComponentId = detail::ComponentTraits<std::remove_cv_t<Component>>::Id();
+
+  auto const comp_idx = component_registry_[kComponentId][&archetype];
+  return archetype.component_arrays[comp_idx].template Data<Component>();
 }
 
 }  // namespace ra::ecs

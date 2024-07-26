@@ -30,6 +30,29 @@ ra::ecs::World world;
 
 ra::job::Executor job_executor;
 
+struct Position {
+  ra::math::Vec2f pos{10.0f};
+};
+
+struct Velocity {
+  float vel{22.0f};
+};
+
+struct Health {
+  int32_t hp{100};
+};
+
+void SimpleSystem(std::span<Position> positions, std::span<const Velocity> velocities) {
+  for (auto idx = 0U; idx < positions.size(); ++idx) {
+    positions[idx].pos += ra::math::Vec2f(velocities[idx].vel) * 0.01f;
+
+    RA_LOG_INFO("pos = (%f, %f)", positions[idx].pos.x, positions[idx].pos.y);
+    RA_LOG_INFO("vel = %f",       velocities[idx].vel);
+  }
+
+  std::printf("\n");
+}
+
 // initialize game data in this function
 void initialize()
 {
@@ -38,18 +61,6 @@ void initialize()
   RA_LOG_ERROR("This is error message %u", 2U);
   RA_LOG_FATAL("This is fatal message %u", 3U);
   RA_LOG_INFO("This is an argument-less message");
-
-  struct Position {
-    ra::math::Vec2f pos{10.0f};
-  };
-
-  struct Velocity {
-    float vel{22.0f};
-  };
-
-  struct Health {
-    int32_t hp{100};
-  };
 
   /* First entity */
   auto first = world.NewEntity();
@@ -84,6 +95,8 @@ void initialize()
   RA_LOG_INFO("third.hp  = %d\n", world.Get<Health>(third).hp);
 
   world.Add<Velocity>(third);
+
+  world.Run(&SimpleSystem);
 
   RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
   RA_LOG_INFO("first.vel = %f", world.Get<Velocity>(first).vel);
@@ -168,4 +181,5 @@ void draw()
 // free game data in this function
 void finalize()
 {
+  job_executor.Stop();
 }

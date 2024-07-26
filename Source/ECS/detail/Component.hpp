@@ -14,10 +14,9 @@
 
 namespace ra::ecs::detail {
 
+/* Id */
 class ComponentTag;
-
-using ComponentId   = ra::utils::TypeSafeId<ComponentTag>;
-using ComponentMask = ra::utils::TypeSafeBitmask<ComponentTag>;
+using ComponentId = ra::utils::TypeSafeId<ComponentTag>;
 
 class SequentialGenerator {
  public:
@@ -44,5 +43,18 @@ constexpr ComponentId ComponentTraits<Component>::Id() {
 
 template <typename Component>
 uint64_t ComponentTraits<Component>::bit_index_{SequentialGenerator::Next()};
+
+/* Mask */
+using ComponentMask = ra::utils::TypeSafeBitmask<ComponentTag>;
+
+template <typename Component, typename... Components>
+constexpr ComponentMask ComponentMaskOf() noexcept {
+  if constexpr (sizeof...(Components) == 0) {
+    return ComponentMask(ComponentTraits<std::remove_cv_t<Component>>::Id().Value());
+  } else {
+    return ComponentMask(ComponentTraits<std::remove_cv_t<Component>>::Id().Value()) |
+           ComponentMaskOf<std::remove_cv_t<Components>...>();
+  }
+}
 
 }  // namespace ra::ecs::detail

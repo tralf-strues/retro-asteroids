@@ -35,7 +35,11 @@ class ComponentArray {
   template <typename Component>
   [[nodiscard]] Component& At(size_t idx);
 
+  template <typename Component>
+  [[nodiscard]] std::span<Component> Data();
+
   [[nodiscard]] std::span<uint8_t> At(size_t idx);
+  [[nodiscard]] std::span<uint8_t> Data();
 
  private:
   void Reallocate();
@@ -61,6 +65,11 @@ size_t ComponentArray::Emplace(ArgTypes&&... args) {
 template <typename Component>
 Component& ComponentArray::At(size_t idx) {
   return *reinterpret_cast<Component*>(At(idx).data());
+}
+
+template <typename Component>
+std::span<Component> ComponentArray::Data() {
+  return std::span(reinterpret_cast<Component*>(data_.get()), size_);
 }
 
 }  // namespace ra::ecs::detail
