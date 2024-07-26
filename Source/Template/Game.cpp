@@ -5,6 +5,7 @@
 #include <stdio.h>
 
 #include <Asset/ImageLoader.hpp>
+#include <ECS/World.hpp>
 #include <Render/Renderer.hpp>
 #include <Utils/Assert.hpp>
 
@@ -24,6 +25,8 @@ ra::render::Image image = ra::asset::LoadImage_BMP("Assets/test_image.bmp").valu
 ra::asset::FontAtlas font =
     ra::asset::LoadFontAtlas_BMFontAtlas("Assets/font_48/font_48.bmp", "Assets/font_48/font_48.fnt").value();
 
+ra::ecs::World world;
+
 // initialize game data in this function
 void initialize()
 {
@@ -32,6 +35,77 @@ void initialize()
   RA_LOG_ERROR("This is error message %u", 2U);
   RA_LOG_FATAL("This is fatal message %u", 3U);
   RA_LOG_INFO("This is an argument-less message");
+
+  struct Position {
+    ra::math::Vec2f pos{10.0f};
+  };
+
+  struct Velocity {
+    float vel{22.0f};
+  };
+
+  struct Health {
+    int32_t hp{100};
+  };
+
+  /* First entity */
+  auto first = world.NewEntity();
+  world.Add<Position>(first);
+
+  RA_LOG_INFO("first.pos = (%f, %f)\n", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+
+  world.Add<Velocity>(first);
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.vel = %f\n", world.Get<Velocity>(first).vel);
+
+  world.Get<Position>(first).pos.x = 22.0f;
+  world.Get<Position>(first).pos.y = -22.0f;
+  world.Get<Velocity>(first).vel   = 10.0f;
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.vel = %f\n", world.Get<Velocity>(first).vel);
+
+  /* Second entity */
+  auto second = world.NewEntity();
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.vel = %f\n", world.Get<Velocity>(first).vel);
+
+  /* Third entity */
+  auto third = world.NewEntity();
+  world.Add<Health>(third);
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.vel = %f", world.Get<Velocity>(first).vel);
+  RA_LOG_INFO("third.hp  = %d\n", world.Get<Health>(third).hp);
+
+  world.Add<Velocity>(third);
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.vel = %f", world.Get<Velocity>(first).vel);
+  RA_LOG_INFO("third.hp  = %d", world.Get<Health>(third).hp);
+  RA_LOG_INFO("third.vel = %f\n", world.Get<Velocity>(third).vel);
+
+  world.Remove<Velocity>(first);
+  world.DestroyEntity(second);
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("third.hp  = %d", world.Get<Health>(third).hp);
+  RA_LOG_INFO("third.vel = %f\n", world.Get<Velocity>(third).vel);
+
+  world.Add<Health>(first);
+  world.Remove<Health>(third);
+
+  RA_LOG_INFO("first.pos = (%f, %f)", world.Get<Position>(first).pos.x, world.Get<Position>(first).pos.y);
+  RA_LOG_INFO("first.hp  = %d", world.Get<Health>(first).hp);
+  RA_LOG_INFO("third.vel = %f\n", world.Get<Velocity>(third).vel);
+
+  world.DestroyEntity(first);
+
+  RA_LOG_INFO("third.vel = %f\n", world.Get<Velocity>(third).vel);
+
+  world.DestroyEntity(third);
 }
 
 // this function is called to update game data,
