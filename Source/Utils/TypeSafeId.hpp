@@ -11,6 +11,7 @@
 #include <compare>
 #include <concepts>
 #include <cstdint>
+#include <optional>
 
 namespace ra::utils {
 
