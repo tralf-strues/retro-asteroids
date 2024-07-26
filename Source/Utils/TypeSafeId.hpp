@@ -38,11 +38,9 @@ constexpr IntegerType TypeSafeId<Tag, IntegerType>::Value() const {
 
 }  // namespace ra::utils
 
-namespace std {
-
 template <typename Tag, std::unsigned_integral IntegerType>
-struct hash<ra::utils::TypeSafeId<Tag, IntegerType>> {
-  size_t operator()(const auto& id) const { return hash<IntegerType>()(id.Value()); }
+struct std::hash<ra::utils::TypeSafeId<Tag, IntegerType>> {
+  size_t operator()(const ra::utils::TypeSafeId<Tag, IntegerType>& id) const noexcept {
+    return std::hash<IntegerType>()(id.Value());
+  }
 };
-
-}  // namespace std
