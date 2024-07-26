@@ -6,6 +6,7 @@
 
 #include <Asset/ImageLoader.hpp>
 #include <ECS/World.hpp>
+#include <JobSystem/Executor.hpp>
 #include <Render/Renderer.hpp>
 #include <Utils/Assert.hpp>
 
@@ -26,6 +27,8 @@ ra::asset::FontAtlas font =
     ra::asset::LoadFontAtlas_BMFontAtlas("Assets/font_48/font_48.bmp", "Assets/font_48/font_48.fnt").value();
 
 ra::ecs::World world;
+
+ra::job::Executor job_executor;
 
 // initialize game data in this function
 void initialize()
@@ -140,15 +143,24 @@ void draw()
 
   renderer.CmdSetViewInfo(ra::math::OrthographicProjectionMatrix(SCREEN_WIDTH / 100.0f, SCREEN_HEIGHT / 100.0f));
 
-  renderer.CmdClear(ra::render::Color(0x33, 0x44, 0x55));
+    renderer.CmdClear(ra::render::Color(0x33, 0x44, 0x55)); 
 
-  renderer.CmdDrawLine(ra::math::Vec2f(0.0f, 0.1f),
-                       ra::math::Vec2f(0.8f, 0.4f),
-                       ra::math::Identity<float>(),
-                       ra::render::Color(0xFFFFFFFF), 3.0f);
+  job_executor.Submit([&]() {
+    renderer.CmdDrawLine(ra::math::Vec2f(0.0f, 0.1f),
+                        ra::math::Vec2f(0.8f, 0.4f),
+                        ra::math::Identity<float>(),
+                        ra::render::Color(0xFFFFFFFF), 3.0f);
+  });
 
-  renderer.CmdDrawImage(image.CreateView(), ra::math::Vec2f(0.0f, 0.0f));
-  renderer.CmdDrawText("Hello, World.", ra::math::Vec2f(-0.5f, -0.5f), font);
+  job_executor.Submit([&]() {
+    renderer.CmdDrawImage(image.CreateView(), ra::math::Vec2f(0.0f, 0.0f));
+  });
+
+  job_executor.Submit([&]() {
+    renderer.CmdDrawText("Hello, World.", ra::math::Vec2f(-0.5f, -0.5f), font);
+  });
+
+  job_executor.WaitIdle();
 
   renderer.EndFrame();
 }
