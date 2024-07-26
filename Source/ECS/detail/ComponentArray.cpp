@@ -8,6 +8,8 @@
 
 #include <ECS/detail/ComponentArray.hpp>
 
+#include <cstring>
+
 namespace ra::ecs::detail {
 
 ComponentArray::ComponentArray(detail::ComponentId component_id, size_t component_size)
