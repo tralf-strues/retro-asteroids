@@ -9,7 +9,10 @@
 #pragma once
 
 #include <Utils/BlockingQueue.hpp>
+
+#include <functional>
 #include <thread>
+#include <vector>
 
 namespace ra::job {
 
