@@ -11,6 +11,7 @@
 #include <ECS/Entity.hpp>
 
 #include <span>
+#include <unordered_map>
 
 namespace ra::ecs {
 
