@@ -21,7 +21,7 @@ class Renderer {
   void BeginFrame(ImageView<Color> render_target);
   void EndFrame();
 
-  void CmdSetViewInfo(math::Mat3f proj_view);
+  void CmdSetViewInfo(math::Mat3f proj_view, math::Mat3f inv_proj_view);
 
   void CmdClear(Color clear_color);
   void CmdDrawLine(const math::Vec2f& ms_from, const math::Vec2f& ms_to, const math::Mat3f& transform, Color color,
@@ -30,6 +30,8 @@ class Renderer {
 
   void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2f& ndc_pos);
   void CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font);
+
+  math::Vec2f ScreenSpaceToWorld(const math::Vec2u& ss_pos) const;
 
  private:
   inline constexpr math::Vec2f ConvertNDCToFramebuffer(const math::Vec2f& ndc) const {
@@ -74,6 +76,7 @@ class Renderer {
 
   ImageView<Color> rt_;
   math::Mat3f proj_view_;
+  math::Mat3f inv_proj_view_;
 };
 
 }  // namespace ra::render

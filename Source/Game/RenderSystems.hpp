@@ -10,6 +10,7 @@
 
 #include <Game/Components.hpp>
 #include <JobSystem/Executor.hpp>
+#include <Render/ParticleSystem.hpp>
 #include <Render/Renderer.hpp>
 
 #include <span>
@@ -29,6 +30,22 @@ void RenderPolygons(ContextRenderPolygons& context,
   for (auto i = 0U; i < size; ++i) {
     context.executor.Submit([=]() {
       context.renderer.CmdDrawPolygon(*polygons[i].polygon, matrices[i].matrix);
+    });
+  }
+}
+
+struct ContextRenderParticles {
+  render::Renderer& renderer;
+  job::Executor&    executor;
+};
+
+void RenderParticles(ContextRenderParticles& context, std::span<const TransformMatrix> matrices,
+                     std::span<render::ParticleSystem> particle_systems) {
+  const auto size = matrices.size();
+
+  for (auto i = 0U; i < size; ++i) {
+    context.executor.Submit([=]() {
+      particle_systems[i].Render(context.renderer);
     });
   }
 }

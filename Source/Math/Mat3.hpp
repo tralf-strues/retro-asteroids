@@ -195,4 +195,8 @@ inline constexpr Mat3f OrthographicProjectionMatrix(float horizontal, float vert
   return OrthographicProjectionMatrix(-horizontal / 2.0f, horizontal / 2.0f, -vertical / 2.0f, vertical / 2.0f);
 }
 
+inline constexpr Mat3f InverseOrthographicProjectionMatrix(float horizontal, float vertical) {
+  return OrthographicProjectionMatrix(4.0f / horizontal, 4.0f / vertical);
+}
+
 }  // namespace ra::math

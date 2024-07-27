@@ -85,14 +85,16 @@ void World::RemoveEntityRecord(EntityRecord record) {
     return;
   }
 
+  for (auto& component_array : archetype.component_arrays) {
+    component_array.Remove(record.idx);
+  }
+
   const auto last_idx    = archetype.component_arrays[0U].Size() - 1U;
   const auto last_entity = archetype.idx_to_entity[last_idx];
 
-  archetype.idx_to_entity[record.idx] = last_entity;
-  entity_registry_[last_entity].idx   = record.idx;
-
-  for (auto& component_array : archetype.component_arrays) {
-    component_array.Remove(record.idx);
+  if (record.idx != last_idx) {
+    archetype.idx_to_entity[record.idx] = last_entity;
+    entity_registry_[last_entity].idx   = record.idx;
   }
 }
 

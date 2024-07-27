@@ -174,7 +174,7 @@ inline constexpr float Length(const Vec2<T>& vector) {
 
 template <typename T>
 inline constexpr Vec2<T> Normalize(const Vec2<T>& vector) {
-  float len = length(vector);
+  float len = Length(vector);
   if (len == 0.0f) {
     return Vec2<T>(0.0f);
   }
@@ -185,6 +185,11 @@ inline constexpr Vec2<T> Normalize(const Vec2<T>& vector) {
 template <typename T>
 inline constexpr T Dot(const Vec2<T>& lhs, const Vec2<T>& rhs) {
   return lhs.x * rhs.x + lhs.y * rhs.y;
+}
+
+template <typename T>
+inline constexpr Vec2<T> NormalClockwise(const Vec2<T>& vector) {
+  return -Vec2<T>(-vector.y, vector.x);
 }
 
 }  // namespace ra::math

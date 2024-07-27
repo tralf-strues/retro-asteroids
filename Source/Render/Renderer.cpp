@@ -30,17 +30,15 @@ static constexpr inline float CapsuleSDF(math::Vec2f pixel, math::Vec2f from, ma
 }
 
 void Renderer::BeginFrame(ImageView<Color> render_target) {
-  rt_ = render_target;
-  proj_view_ = math::Identity<float>();
+  rt_            = render_target;
 }
 
 void Renderer::EndFrame() {
-  rt_ = {};
-  proj_view_ = {};
 }
 
-void Renderer::CmdSetViewInfo(math::Mat3f proj_view) {
-  proj_view_ = std::move(proj_view);
+void Renderer::CmdSetViewInfo(math::Mat3f proj_view, math::Mat3f inv_proj_view) {
+  proj_view_     = std::move(proj_view);
+  inv_proj_view_ = std::move(inv_proj_view);
 }
 
 void Renderer::CmdClear(Color clear_color) {
@@ -104,6 +102,10 @@ void Renderer::CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, co
     CmdDrawImage(view, cur_pos + ch_info.offset);
     cur_pos.x += font.spacing.x + ch_info.advance;
   }
+}
+
+math::Vec2f Renderer::ScreenSpaceToWorld(const math::Vec2u& ss_pos) const {
+  return math::Vec2f(inv_proj_view_ * math::Vec3f(ConvertFramebufferToNDC(math::Vec2f(ss_pos)), 1.0f));
 }
 
 void Renderer::CmdDrawImage(ImageView<const Color> view, const math::Vec2i& pos) {

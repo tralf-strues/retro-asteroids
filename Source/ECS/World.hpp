@@ -93,7 +93,16 @@ class World {
   void Run(FreeSystem<Components...> system);
 
   template <typename Context, typename... Components>
-  void Run(Context& context, System<Context, Components...> system);
+  void Run(Context& context, SystemSingle<Context, Components...> system);
+
+  template <typename Context, typename... Components>
+  void Run(Context& context, SystemVector<Context, Components...> system);
+
+  template <typename Context, typename... Components>
+  void Run(Context& context, MegaSystemVector<Context, Components...> system);
+
+  template <typename Context, typename... Components>
+  void RunPairs(Context& context, InteractionSystem<Context, Components...>);
 
  private:
   struct Archetype {
@@ -121,6 +130,9 @@ class World {
 
   template <typename Component>
   std::span<Component> QueryComponent(Archetype& archetype);
+
+  template <typename Context, typename... Components>
+  void RunPairsInternal(Context& context, InteractionSystem<Context, Components...>, EntityId first_entity);
 
   ArchetypeRegistry archetype_registry_;
   EntityRegistry    entity_registry_;
@@ -225,12 +237,69 @@ void World::Run(FreeSystem<Components...> system) {
 }
 
 template <typename Context, typename... Components>
-void World::Run(Context& context, System<Context, Components...> system) {
+void World::Run(Context& context, SystemSingle<Context, Components...> system) {
+  struct ExtendedContext {
+    SystemSingle<Context, Components...>& single_system;
+    Context&                              single_context;
+  } extended_context {
+    .single_system  = system,
+    .single_context = context
+  };
+
+  Run(extended_context, &detail::DefaultVectorSystem<ExtendedContext, Components...>);
+}
+
+template <typename Context, typename... Components>
+void World::Run(Context& context, SystemVector<Context, Components...> system) {
   static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
 
   for (const auto& [archetype_mask, archetype] : archetype_registry_) {
     if (archetype_mask.Has(kComponentMask)) {
       system(context, QueryComponent<Components>(*archetype.get())...);
+    }
+  }
+}
+
+template <typename Context, typename... Components>
+void World::Run(Context& context, MegaSystemVector<Context, Components...> system) {
+  static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
+
+  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+    if (archetype_mask.Has(kComponentMask)) {
+      system(context, archetype->idx_to_entity, QueryComponent<Components>(*archetype.get())...);
+    }
+  }
+}
+
+template <typename Context, typename... Components>
+void World::RunPairs(Context& context, InteractionSystem<Context, Components...> system) {
+  static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
+
+  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+    if (!archetype_mask.Has(kComponentMask)) {
+      continue;
+    }
+
+    for (auto [idx, entity_id] : archetype->idx_to_entity) {
+      RunPairsInternal(context, system, entity_id);
+    }
+  }
+}
+
+template <typename Context, typename... Components>
+void World::RunPairsInternal(Context& context, InteractionSystem<Context, Components...> system,
+                             EntityId first_entity) {
+  static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
+
+  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+    if (!archetype_mask.Has(kComponentMask)) {
+      continue;
+    }
+
+    for (auto [idx, second_entity] : archetype->idx_to_entity) {
+      if (first_entity != second_entity) {
+        system(context, first_entity, second_entity);
+      }
     }
   }
 }
