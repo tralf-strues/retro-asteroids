@@ -12,6 +12,7 @@
 #include <Math/Mat3.hpp>
 #include <Render/Color.hpp>
 #include <Render/Image.hpp>
+#include <Render/Polygon.hpp>
 
 namespace ra::render {
 
@@ -25,6 +26,7 @@ class Renderer {
   void CmdClear(Color clear_color);
   void CmdDrawLine(const math::Vec2f& ms_from, const math::Vec2f& ms_to, const math::Mat3f& transform, Color color,
                    float thickness = 1.0f);
+  void CmdDrawPolygon(const Polygon& polygon, const math::Mat3f& transform);
 
   void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2f& ndc_pos);
   void CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font);

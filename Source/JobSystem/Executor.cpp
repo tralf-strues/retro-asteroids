@@ -42,6 +42,10 @@ Executor::~Executor() {
   RA_ASSERT(stopped_.load() == 1, "Executor must be stopped before destructor!");
 }
 
+size_t Executor::ThreadCount() const {
+  return threads_.size();
+}
+
 void Executor::Submit(Job job) {
   jobs_left_.fetch_add(1);
   jobs_.Push(std::move(job));

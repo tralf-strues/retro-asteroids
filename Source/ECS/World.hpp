@@ -90,7 +90,10 @@ class World {
   void Remove(EntityId entity);
 
   template <typename... Components>
-  void Run(System<Components...> system);
+  void Run(FreeSystem<Components...> system);
+
+  template <typename Context, typename... Components>
+  void Run(Context& context, System<Context, Components...> system);
 
  private:
   struct Archetype {
@@ -211,12 +214,23 @@ void World::Remove(EntityId entity) {
 }
 
 template <typename... Components>
-void World::Run(System<Components...> system) {
+void World::Run(FreeSystem<Components...> system) {
   static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
 
   for (const auto& [archetype_mask, archetype] : archetype_registry_) {
     if (archetype_mask.Has(kComponentMask)) {
       system(QueryComponent<Components>(*archetype.get())...);
+    }
+  }
+}
+
+template <typename Context, typename... Components>
+void World::Run(Context& context, System<Context, Components...> system) {
+  static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
+
+  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+    if (archetype_mask.Has(kComponentMask)) {
+      system(context, QueryComponent<Components>(*archetype.get())...);
     }
   }
 }

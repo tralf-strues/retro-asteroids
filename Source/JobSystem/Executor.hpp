@@ -29,6 +29,8 @@ class Executor {
   Executor(Executor&&) = delete;
   Executor& operator=(Executor&&) = delete;
 
+  size_t ThreadCount() const;
+
   void Submit(Job job);
 
   void WaitIdle();

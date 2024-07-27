@@ -55,13 +55,13 @@ struct ColorHeaderBMP {
 
 namespace ra::asset {
 
-std::optional<render::Image<render::Color>> LoadImage_BMP(const std::filesystem::path& filepath) {
+std::shared_ptr<render::Image<render::Color>> LoadImage_BMP(const std::filesystem::path& filepath) {
   RA_LOG_INFO("Loading image \"%s\"...", filepath.c_str());
 
   std::ifstream fs(filepath, std::ios_base::binary);
   if (!fs.is_open()) {
     RA_LOG_ERROR("Failed to open file \"%s\"", filepath.c_str());
-    return std::nullopt;
+    return nullptr;
   }
 
   FileHeaderBMP file_header;
@@ -69,7 +69,7 @@ std::optional<render::Image<render::Color>> LoadImage_BMP(const std::filesystem:
   if (file_header.file_type != kMagicNumberBMP) {
     RA_LOG_ERROR("Invalid file header's type 0x%X (must be 0x%X)", static_cast<uint32_t>(file_header.file_type),
                  static_cast<uint32_t>(kMagicNumberBMP));
-    return std::nullopt;
+    return nullptr;
   }
 
   InfoHeaderBMP info_header;
@@ -77,13 +77,13 @@ std::optional<render::Image<render::Color>> LoadImage_BMP(const std::filesystem:
 
   if (info_header.height < 0) {
     RA_LOG_ERROR("Currently parser does not handle negative image height (height=%d)", info_header.height);
-    return std::nullopt;
+    return nullptr;
   }
 
   if (info_header.bit_count != 32U) {
     RA_LOG_ERROR("Currently parser does not handle images not with 32-bit depth (depth=%u)",
                  static_cast<uint32_t>(info_header.bit_count));
-    return std::nullopt;
+    return nullptr;
   }
 
   fs.seekg(file_header.offset_data, std::ifstream::beg);
@@ -91,11 +91,12 @@ std::optional<render::Image<render::Color>> LoadImage_BMP(const std::filesystem:
   const uint32_t row_size_bytes = info_header.width * (info_header.bit_count / 8U);
   const uint32_t size_bytes = row_size_bytes * static_cast<uint32_t>(info_header.height);
 
-  render::Image image{std::make_unique<render::Color[]>(size_bytes / sizeof(render::Color)),
-                      math::Vec2u(info_header.width, info_header.height)};
+  auto pixels = std::make_unique<render::Color[]>(size_bytes / sizeof(render::Color));
+  auto image  = std::make_shared<render::Image<render::Color>>(std::move(pixels),
+                                                               math::Vec2u(info_header.width, info_header.height));
 
   for (int32_t y = 0; y < info_header.height; ++y) {
-    auto target_row = image.CreateView().Row(info_header.height - y - 1);
+    auto target_row = image->CreateView().Row(info_header.height - y - 1);
     fs.read(reinterpret_cast<char*>(target_row.data()), row_size_bytes);
   }
 

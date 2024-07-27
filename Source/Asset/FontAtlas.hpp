@@ -12,7 +12,6 @@
 #include <Render/Image.hpp>
 
 #include <filesystem>
-#include <optional>
 #include <unordered_map>
 
 namespace ra::asset {
@@ -29,9 +28,9 @@ struct FontAtlas {
   using CharacterInfoMap = std::unordered_map<char, CharacterInfo>;
   using ImageViewMap     = std::unordered_map<char, render::ImageView<render::Color>>;
 
-  Image            image;
-  ImageViewMap     image_views;
-  CharacterInfoMap characters;
+  std::shared_ptr<Image> image;
+  ImageViewMap           image_views;
+  CharacterInfoMap       characters;
 
   math::Vec4i padding_urdl;
   math::Vec2i spacing;
@@ -39,7 +38,7 @@ struct FontAtlas {
   int32_t     base_y;
 };
 
-std::optional<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& image_filepath,
-                                                   const std::filesystem::path& font_filepath);
+std::shared_ptr<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& image_filepath,
+                                                     const std::filesystem::path& font_filepath);
 
 }  // namespace ra::asset

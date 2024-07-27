@@ -70,14 +70,14 @@ static void ParseChar(std::string_view view, FontAtlas& font) {
   info.advance             = ParseTokenInt<"xadvance">(view);
 
   font.characters[ch] = info;
-  font.image_views[ch] = font.image.CreateView(math::Vec2u(info.position_in_image), math::Vec2u(info.extent_pixels));
+  font.image_views[ch] = font.image->CreateView(math::Vec2u(info.position_in_image), math::Vec2u(info.extent_pixels));
 }
 
-std::optional<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& image_filepath,
-                                                   const std::filesystem::path& font_filepath) {
+std::shared_ptr<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& image_filepath,
+                                                     const std::filesystem::path& font_filepath) {
   auto image = LoadImage_BMP(image_filepath);
   if (!image) {
-    return std::nullopt;
+    return nullptr;
   }
 
   RA_LOG_INFO("Loading font file \"%s\"...", font_filepath.c_str());
@@ -85,22 +85,22 @@ std::optional<FontAtlas> LoadFontAtlas_BMFontAtlas(const std::filesystem::path& 
   std::ifstream fs(font_filepath, std::ios::in);
   if (!fs.is_open()) {
     RA_LOG_ERROR("Failed to open file \"%s\"", font_filepath.c_str());
-    return std::nullopt;
+    return nullptr;
   }
 
-  FontAtlas font;
-  font.image = std::move(image.value());
+  auto font   = std::make_shared<FontAtlas>();
+  font->image = image;
 
   while (!fs.eof()) {
     std::string line;
     std::getline(fs, line);
 
     if (line.find("info ") == 0U) {
-      ParseInfo(line, font);
+      ParseInfo(line, *font);
     } else if (line.find("common ") == 0U) {
-      ParseCommon(line, font);
+      ParseCommon(line, *font);
     } else if (line.find("char ") == 0U) {
-      ParseChar(line, font);
+      ParseChar(line, *font);
     }
   }
 

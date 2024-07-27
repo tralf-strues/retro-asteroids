@@ -77,6 +77,19 @@ void Renderer::CmdDrawLine(const math::Vec2f& ms_from, const math::Vec2f& ms_to,
   }
 }
 
+void Renderer::CmdDrawPolygon(const Polygon& polygon, const math::Mat3f& transform) {
+  size_t vertices_count = polygon.vertices.size();
+
+  for (uint32_t vertex = 0U; vertex < vertices_count; ++vertex) {
+    if (polygon.vertices[vertex].split || polygon.vertices[(vertex + 1U) % vertices_count].split) {
+      continue;
+    }
+
+    CmdDrawLine(polygon.vertices[vertex].ms_position, polygon.vertices[(vertex + 1U) % vertices_count].ms_position,
+                transform, polygon.color, polygon.thickness);
+  }
+}
+
 void Renderer::CmdDrawImage(ImageView<Color const> view, const math::Vec2f& ndc_pos) {
   CmdDrawImage(view, math::Vec2i(ConvertNDCToFramebuffer(ndc_pos)));
 }
