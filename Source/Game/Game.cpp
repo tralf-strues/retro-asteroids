@@ -36,6 +36,8 @@ void Game::StartNew() {
   explosions_ = world_.NewEntity();
   world_.Add<render::ParticleSystem>(explosions_) = render::ParticleSystem(2048U);
   world_.Add<render::ParticleSystem::ParticleSpecs>(explosions_) = {
+    .origin             = math::Vec2f(0.0f),
+    .velocity           = math::Vec2f(0.0f),
     .velocity_variation = math::Vec2f(100.0f),
 
     .color_begin = math::Vec4f(0.9f, 0.8f, 0.1f, 1.0f),
@@ -142,10 +144,10 @@ void Game::Render(render::ImageView<render::Color>& render_target) {
     .executor = executor_
   };
   world_.Run(context_particles, &systems::RenderParticles);
+  executor_.WaitIdle();
 
   /* UI */
   RenderUI();
-
   executor_.WaitIdle();
 
   defer_queue_.Execute(world_);
@@ -195,7 +197,7 @@ static constexpr std::string_view kScoreFilepath = "highest_score.txt";
 void Game::LoadHighScore() {
   RA_LOG_INFO("Loading highest score to \"%s\"...", kScoreFilepath.data());
 
-  std::ifstream fs(kScoreFilepath);
+  std::ifstream fs(kScoreFilepath.data());
   if (!fs.is_open()) {
     RA_LOG_WARN("No known highest score file found \"%s\"", kScoreFilepath.data());
     highest_score_ = 0U;
@@ -214,7 +216,7 @@ void Game::StoreHighScore() {
 
   RA_LOG_INFO("Saving highest score to \"%s\"...", kScoreFilepath.data());
 
-  std::ofstream fs(kScoreFilepath);
+  std::ofstream fs(kScoreFilepath.data());
   if (!fs.is_open()) {
     RA_LOG_ERROR("Failed to open file \"%s\"", kScoreFilepath.data());
     return;
