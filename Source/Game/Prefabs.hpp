@@ -16,7 +16,7 @@ namespace ra {
 struct Transform;
 
 ecs::EntityId SpawnPlayer(ecs::World& world);
-ecs::EntityId SpawnUFO(ecs::World& world, math::Vec2f pos, ecs::EntityId target);
+ecs::EntityId SpawnUFO(ecs::World& world, math::Vec2f pos, float speed, ecs::EntityId target);
 
 ecs::EntityId SpawnProjectile(ecs::World& world, const Transform& transform, math::Vec2f velocity);
 

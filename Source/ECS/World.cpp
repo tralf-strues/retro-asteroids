@@ -30,15 +30,11 @@ EntityId World::NewEntity() {
 }
 
 void World::DestroyEntity(EntityId entity) {
-  RemoveEntityRecord(entity_registry_[entity]);
-  entity_registry_.erase(entity);
+  if (auto it = entity_registry_.find(entity); it != entity_registry_.end()) {
+    RemoveEntityRecord(it->second, true);
+    entity_registry_.erase(it);
+  }
 }
-
-// void World::DumpStorageLayout(std::ostream os) {
-//   for (const auto& [component_mask, archetype] : archetype_registry_) {
-//     os << "Archetype 0b" << 
-//   }
-// }
 
 World::Archetype* World::FindArchetype(detail::ComponentMask component_mask) {
   auto it = archetype_registry_.find(component_mask);
@@ -46,7 +42,7 @@ World::Archetype* World::FindArchetype(detail::ComponentMask component_mask) {
 }
 
 World::Archetype* World::CreateArchetype(Archetype* old_archetype, detail::ComponentMask new_mask,
-                                         size_t component_size) {
+                                         size_t component_size, detail::ComponentArray::DestructorFunc destructor) {
   auto old_mask = old_archetype->component_mask;
   bool is_add   = new_mask.Has(old_mask);
   auto comp_id  = detail::ComponentId((old_mask ^ new_mask).Value());
@@ -65,20 +61,20 @@ World::Archetype* World::CreateArchetype(Archetype* old_archetype, detail::Compo
 
     const auto new_array_idx = new_archetype->component_arrays.size();
     component_registry_[old_id][new_archetype.get()] = new_array_idx;
-    new_archetype->component_arrays.emplace_back(old_id,
+    new_archetype->component_arrays.emplace_back(old_archetype->component_arrays[old_array_idx].Destructor(), old_id,
                                                  old_archetype->component_arrays[old_array_idx].ComponentSize());
   }
 
   if (is_add) {
     component_registry_[comp_id][new_archetype.get()] = old_components_count;
-    new_archetype->component_arrays.emplace_back(comp_id, component_size);
+    new_archetype->component_arrays.emplace_back(destructor, comp_id, component_size);
   }
 
   auto emplaced = archetype_registry_.emplace(new_mask, std::move(new_archetype));
   return emplaced.first->second.get();
 }
 
-void World::RemoveEntityRecord(EntityRecord record) {
+void World::RemoveEntityRecord(EntityRecord record, bool destroy_component) {
   auto& archetype = *record.archetype;
 
   if (archetype.component_arrays.empty()) {
@@ -86,16 +82,18 @@ void World::RemoveEntityRecord(EntityRecord record) {
   }
 
   for (auto& component_array : archetype.component_arrays) {
-    component_array.Remove(record.idx);
+    component_array.Remove(record.idx, destroy_component);
   }
 
-  const auto last_idx    = archetype.component_arrays[0U].Size() - 1U;
+  const auto last_idx    = archetype.component_arrays[0U].Size();  // Because we have already removed from arrays
   const auto last_entity = archetype.idx_to_entity[last_idx];
 
   if (record.idx != last_idx) {
     archetype.idx_to_entity[record.idx] = last_entity;
     entity_registry_[last_entity].idx   = record.idx;
   }
+
+  archetype.idx_to_entity.erase(last_idx);
 }
 
 }  // namespace ra::ecs

@@ -1,4 +1,4 @@
-color=rgba(226, 88, 34, 255)
+color=rgba(227, 64, 7, 255)
 thickness=1.5
 
 A=vec2(0,-0.3)

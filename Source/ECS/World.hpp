@@ -83,6 +83,9 @@ class World {
   template <typename Component>
   [[nodiscard]] Component& Get(EntityId entity);
 
+  template <typename Component>
+  [[nodiscard]] Component* TryGet(EntityId entity);
+
   template <typename Component, typename... ArgTypes>
   Component& Add(EntityId entity, ArgTypes&&... args);
 
@@ -102,13 +105,16 @@ class World {
   void Run(Context& context, MegaSystemVector<Context, Components...> system);
 
   template <typename Context, typename... Components>
-  void RunPairs(Context& context, InteractionSystem<Context, Components...>);
+  void RunInteractions(Context& context, InteractionSystem<Context, Components...> system);
 
  private:
   struct Archetype {
-    detail::ComponentMask                  component_mask;
-    std::vector<detail::ComponentArray>    component_arrays;
-    std::unordered_map<uint64_t, EntityId> idx_to_entity;
+    using ComponentArrays = std::vector<detail::ComponentArray>;
+    using MapIdxToEntity  = std::unordered_map<uint64_t, EntityId>;
+
+    detail::ComponentMask component_mask;
+    ComponentArrays       component_arrays;
+    MapIdxToEntity        idx_to_entity;
   };
 
   struct EntityRecord {
@@ -124,15 +130,18 @@ class World {
   using ComponentRegistry = std::unordered_map<detail::ComponentId, ComponentRecords>;
 
   Archetype* FindArchetype(detail::ComponentMask component_mask);
-  Archetype* CreateArchetype(Archetype* old_archetype, detail::ComponentMask new_mask, size_t component_size);
+  Archetype* CreateArchetype(Archetype* old_archetype, detail::ComponentMask new_mask, size_t component_size,
+                             detail::ComponentArray::DestructorFunc destructor);
 
-  void RemoveEntityRecord(EntityRecord record);
+  void RemoveEntityRecord(EntityRecord record, bool destroy_component);
 
   template <typename Component>
   std::span<Component> QueryComponent(Archetype& archetype);
 
   template <typename Context, typename... Components>
-  void RunPairsInternal(Context& context, InteractionSystem<Context, Components...>, EntityId first_entity);
+  void RunInteractionsInternal(Context& context, InteractionSystem<Context, Components...>, EntityId first_entity,
+                               ArchetypeRegistry::const_iterator         it_archetypes,
+                               Archetype::MapIdxToEntity::const_iterator it_entity_mappings);
 
   ArchetypeRegistry archetype_registry_;
   EntityRegistry    entity_registry_;
@@ -152,15 +161,24 @@ bool World::Has(EntityId entity) const {
 
 template <typename Component>
 Component& World::Get(EntityId entity) {
+  return *TryGet<Component>(entity);
+}
+
+template <typename Component>
+Component* World::TryGet(EntityId entity) {
   static const detail::ComponentId kComponentId = detail::ComponentTraits<Component>::Id();
 
   auto  entity_record = entity_registry_[entity];
   auto* archetype     = entity_record.archetype;
 
-  auto& component_records = component_registry_.at(kComponentId);
-  auto  component_record  = component_records.find(archetype)->second;
+  auto& component_records   = component_registry_.at(kComponentId);
+  auto  component_record_it = component_records.find(archetype);
+  if (component_record_it == component_records.end()) {
+    return nullptr;
+  }
 
-  return archetype->component_arrays[component_record].template At<Component>(entity_record.idx);
+  auto component_record = component_record_it->second;
+  return &archetype->component_arrays[component_record].template At<Component>(entity_record.idx);
 }
 
 template <typename Component, typename... ArgTypes>
@@ -173,7 +191,8 @@ Component& World::Add(EntityId entity, ArgTypes&&... args) {
   auto  new_component_mask = old_archetype->component_mask | detail::ComponentMask(kComponentId.Value());
   auto* new_archetype      = FindArchetype(new_component_mask);
   if (!new_archetype) {
-    new_archetype = CreateArchetype(old_archetype, new_component_mask, sizeof(Component));
+    new_archetype = CreateArchetype(old_archetype, new_component_mask, sizeof(Component),
+                                    &detail::TypeErasedDestructor<Component>);
   }
 
   // Move all overlapping components from old archetype's record to new one
@@ -191,7 +210,7 @@ Component& World::Add(EntityId entity, ArgTypes&&... args) {
   entity_registry_[entity] = EntityRecord{.archetype = new_archetype, .idx = entity_idx};
 
   // Remove entity record from old archetype
-  RemoveEntityRecord(old_record);
+  RemoveEntityRecord(old_record, false);
 
   return Get<Component>(entity);
 }
@@ -206,7 +225,8 @@ void World::Remove(EntityId entity) {
   auto  new_component_mask = old_archetype->component_mask.Without(detail::ComponentMask(kComponentId.Value()));
   auto* new_archetype      = FindArchetype(new_component_mask);
   if (!new_archetype) {
-    new_archetype = CreateArchetype(old_archetype, new_component_mask, sizeof(Component));
+    new_archetype = CreateArchetype(&detail::TypeErasedDestructor<Component>, old_archetype,
+                                    new_component_mask, sizeof(Component));
   }
 
   // Move all overlapping components from old archetype's record to new one
@@ -222,7 +242,7 @@ void World::Remove(EntityId entity) {
   entity_registry_[entity] = EntityRecord{.archetype = new_archetype, .idx = entity_idx};
 
   // Remove entity record from old archetype
-  RemoveEntityRecord(old_record);
+  RemoveEntityRecord(old_record, true);
 }
 
 template <typename... Components>
@@ -272,33 +292,39 @@ void World::Run(Context& context, MegaSystemVector<Context, Components...> syste
 }
 
 template <typename Context, typename... Components>
-void World::RunPairs(Context& context, InteractionSystem<Context, Components...> system) {
+void World::RunInteractions(Context& context, InteractionSystem<Context, Components...> system) {
   static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
 
-  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+  for (auto archetype_it = archetype_registry_.begin(); archetype_it != archetype_registry_.end(); ++archetype_it) {
+    const auto& [archetype_mask, archetype] = *archetype_it;
     if (!archetype_mask.Has(kComponentMask)) {
       continue;
     }
 
-    for (auto [idx, entity_id] : archetype->idx_to_entity) {
-      RunPairsInternal(context, system, entity_id);
+    auto& idx_to_entity = archetype->idx_to_entity;
+    for (auto it_entity = idx_to_entity.begin(); it_entity != idx_to_entity.end(); ++it_entity) {
+      RunInteractionsInternal<Context, Components...>(context, system, it_entity->second, archetype_it, it_entity);
     }
   }
 }
 
 template <typename Context, typename... Components>
-void World::RunPairsInternal(Context& context, InteractionSystem<Context, Components...> system,
-                             EntityId first_entity) {
+void World::RunInteractionsInternal(Context& context, InteractionSystem<Context, Components...> system,
+                                    EntityId first_entity, ArchetypeRegistry::const_iterator it_archetypes,
+                                    Archetype::MapIdxToEntity::const_iterator it_entity_mappings) {
   static const detail::ComponentMask kComponentMask = detail::ComponentMaskOf<std::remove_cv_t<Components>...>();
 
-  for (const auto& [archetype_mask, archetype] : archetype_registry_) {
+  for (auto archetype_it = it_archetypes; archetype_it != archetype_registry_.end(); ++archetype_it) {
+    const auto& [archetype_mask, archetype] = *archetype_it;
     if (!archetype_mask.Has(kComponentMask)) {
       continue;
     }
 
-    for (auto [idx, second_entity] : archetype->idx_to_entity) {
-      if (first_entity != second_entity) {
-        system(context, first_entity, second_entity);
+    auto& idx_to_entity = archetype->idx_to_entity;
+    auto  it_entity     = (archetype_it == it_archetypes) ? it_entity_mappings : idx_to_entity.begin();
+    for (; it_entity != idx_to_entity.end(); ++it_entity) {
+      if (first_entity != it_entity->second) {
+        system(context, first_entity, it_entity->second);
       }
     }
   }

@@ -1,4 +1,4 @@
-color=rgba(120, 120, 120, 255)
+color=rgba(180, 180, 180, 255)
 thickness=1
 
 symmetry

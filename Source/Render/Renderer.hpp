@@ -28,8 +28,9 @@ class Renderer {
                    float thickness = 1.0f);
   void CmdDrawPolygon(const Polygon& polygon, const math::Mat3f& transform);
 
-  void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2f& ndc_pos);
-  void CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font);
+  void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2f& ndc_pos, float transparency = 1.0f);
+  void CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font,
+                   float transparency = 1.0f);
 
   math::Vec2f ScreenSpaceToWorld(const math::Vec2u& ss_pos) const;
 
@@ -72,7 +73,7 @@ class Renderer {
     SetPixel(pixel, Color(result));
   }
 
-  void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2i& pos);
+  void CmdDrawImage(ImageView<const Color> image_view, const math::Vec2i& pos, float transparency = 1.0f);
 
   ImageView<Color> rt_;
   math::Mat3f proj_view_;

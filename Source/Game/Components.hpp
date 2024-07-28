@@ -47,6 +47,7 @@ struct TransformMatrix {
 
 struct FollowTarget {
   std::optional<ecs::EntityId> target{std::nullopt};
+  float                        speed;
 };
 
 struct SphereCollider {
@@ -61,6 +62,19 @@ constexpr bool SpheresCollide(const SphereCollider& first, const SphereCollider&
   return math::LengthSquared(second.ws_pos - first.ws_pos) <=
          (second.ws_radius + first.ws_radius) * (second.ws_radius + first.ws_radius);
 }
+
+enum class TeamTag : uint32_t {
+  Player,
+  Enemy
+};
+
+struct Health {
+  int32_t value;
+};
+
+struct Damage {
+  int32_t value;
+};
 
 /* Render components */
 struct PolygonRenderer {

@@ -88,18 +88,19 @@ void Renderer::CmdDrawPolygon(const Polygon& polygon, const math::Mat3f& transfo
   }
 }
 
-void Renderer::CmdDrawImage(ImageView<Color const> view, const math::Vec2f& ndc_pos) {
+void Renderer::CmdDrawImage(ImageView<Color const> view, const math::Vec2f& ndc_pos, float transparency) {
   CmdDrawImage(view, math::Vec2i(ConvertNDCToFramebuffer(ndc_pos)));
 }
 
-void Renderer::CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font) {
+void Renderer::CmdDrawText(std::string_view text, const math::Vec2f& ndc_pos, const asset::FontAtlas& font,
+                           float transparency) {
   auto cur_pos = math::Vec2i(ConvertNDCToFramebuffer(ndc_pos)) + math::Vec2i(font.padding_urdl.x, font.padding_urdl.w);
 
   for (char ch : text) {
     const auto& ch_info = font.characters.at(ch);
     const auto& view    = font.image_views.at(ch);
 
-    CmdDrawImage(view, cur_pos + ch_info.offset);
+    CmdDrawImage(view, cur_pos + ch_info.offset, transparency);
     cur_pos.x += font.spacing.x + ch_info.advance;
   }
 }
@@ -108,10 +109,13 @@ math::Vec2f Renderer::ScreenSpaceToWorld(const math::Vec2u& ss_pos) const {
   return math::Vec2f(inv_proj_view_ * math::Vec3f(ConvertFramebufferToNDC(math::Vec2f(ss_pos)), 1.0f));
 }
 
-void Renderer::CmdDrawImage(ImageView<const Color> view, const math::Vec2i& pos) {
+void Renderer::CmdDrawImage(ImageView<const Color> view, const math::Vec2i& pos, float transparency) {
   for (uint32_t y = 0U; y < view.Extent().y; ++y) {
     for (uint32_t x = 0U; x < view.Extent().x; ++x) {
-      SetPixelBlended(pos + math::Vec2i(x, y), math::Vec4f(view(x, y)));
+      auto color = math::Vec4f(view(x, y));
+      color.a *= transparency;
+
+      SetPixelBlended(pos + math::Vec2i(x, y), color);
     }
   }
 }

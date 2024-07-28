@@ -24,6 +24,7 @@ class Image {
 
   Image() = default;
   Image(PixelData&& pixels, const math::Vec2u& extent);
+  explicit Image(const math::Vec2u& extent);
 
   [[nodiscard]] ImageView CreateView(math::Vec2u offset = math::Vec2u(0U), math::Vec2u extent = kWholeExtent);
   [[nodiscard]] ImageView CreateView(math::Vec2u offset = math::Vec2u(0U), math::Vec2u extent = kWholeExtent) const;
@@ -37,6 +38,11 @@ class Image {
 
 template <typename PixelType>
 Image<PixelType>::Image(PixelData&& pixels, const math::Vec2u& extent) : pixels_(std::move(pixels)), extent_(extent) {}
+
+template <typename PixelType>
+Image<PixelType>::Image(const math::Vec2u& extent) : extent_(extent) {
+  pixels_ = std::make_unique<PixelType[]>(extent.x * extent.y);
+}
 
 template <typename PixelType>
 typename Image<PixelType>::ImageView Image<PixelType>::CreateView(math::Vec2u offset, math::Vec2u extent) {

@@ -39,9 +39,8 @@ struct ContextRenderParticles {
   job::Executor&    executor;
 };
 
-void RenderParticles(ContextRenderParticles& context, std::span<const TransformMatrix> matrices,
-                     std::span<render::ParticleSystem> particle_systems) {
-  const auto size = matrices.size();
+void RenderParticles(ContextRenderParticles& context, std::span<render::ParticleSystem> particle_systems) {
+  const auto size = particle_systems.size();
 
   for (auto i = 0U; i < size; ++i) {
     context.executor.Submit([=]() {
