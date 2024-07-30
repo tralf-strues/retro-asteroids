@@ -3,6 +3,8 @@
 
 Retro Asteroids is a game inspired by [Asteroids](https://en.wikipedia.org/wiki/Asteroids_(video_game)) and [Geometry Wars](https://en.wikipedia.org/wiki/Geometry_Wars) games.
 
+<img src="Readme/macos_screenshot_1.png" width="480"> <img src="Readme/macos_screenshot_game_over.png" width="480">
+
 ## Build
 
 The only dependency is X11. The supported compilers are GCC, ~~Clang~~ (*cannot fully check due to outdated clang versions on github runners*) and AppleClang.
