@@ -3,7 +3,7 @@
 
 Retro Asteroids is a game inspired by [Asteroids](https://en.wikipedia.org/wiki/Asteroids_(video_game)) and [Geometry Wars](https://en.wikipedia.org/wiki/Geometry_Wars) games.
 
-<img src="Readme/macos_screenshot_1.png" width="440"> <img src="Readme/macos_screenshot_game_over.png" width="440">
+<img src="Readme/macos_screenshot_1.png" width="420"> <img src="Readme/macos_screenshot_game_over.png" width="420">
 
 ## Build
 
